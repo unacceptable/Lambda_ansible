@@ -4,7 +4,7 @@
 
 import boto3
 import json
-import os
+import sys, os
 
 '''####################################
 ##### Global Variables ################
@@ -66,34 +66,66 @@ def get_ids(jsondata):
             else:
                 ids = id
 
+    if not isinstance(ids, list):
+        ids = [ids]
+
     return ids
+
 
 def get_meta(ids, jsondata):
 
     meta = None
 
-    for id in ids:
-        ip_address  = get_ip(id, jsondata)
+    if isinstance(ids, list):
+        for id in ids:
+            ip_address  = get_ip(id, jsondata)
+            ssh_key     = get_ssh_key(id, jsondata)
 
-        if meta:
-            newmeta = {
-                id: {
-                    'ansible_ssh_host': ip_address,
-                    'ansible_ssh_user': 'ubuntu',
-                    'ansible_ssh_private_key_file': '~/.ssh/AWS/Blog.pem'
+            if meta:
+                newmeta = {
+                    id: {
+                        'ansible_ssh_host': ip_address,
+                        'ansible_ssh_user': 'ubuntu',
+                        'ansible_ssh_private_key_file': '~/.ssh/AWS/' + ssh_key + '.pem'
+                    }
                 }
-            }
-            meta.update(newmeta)
-        else:
-            meta = {
-                id: {
-                    'ansible_ssh_host': ip_address,
-                    'ansible_ssh_user': 'ubuntu',
-                    'ansible_ssh_private_key_file': '~/.ssh/AWS/Blog.pem'
+                meta.update(newmeta)
+            else:
+                meta = {
+                    id: {
+                        'ansible_ssh_host': ip_address,
+                        'ansible_ssh_user': 'ubuntu',
+                        'ansible_ssh_private_key_file': '~/.ssh/AWS/' + ssh_key + '.pem'
+                    }
                 }
+    else:
+        ip_address  = get_ip(ids, jsondata)
+        ssh_key     = get_ssh_key(ids, jsondata)
+
+        meta = {
+            ids: {
+                        'ansible_ssh_host': ip_address,
+                        'ansible_ssh_user': 'ubuntu',
+                        'ansible_ssh_private_key_file': '~/.ssh/AWS/' + ssh_key + '.pem'
             }
+        }
 
     return meta
+
+
+def get_ssh_key(id, jsondata):
+    key_name = None
+
+    for index in range(len(jsondata)):
+        instance = jsondata[index]['Instances']
+
+        for index in range(len(instance)):
+            if instance[index]['InstanceId'] == id:
+                key_name = instance[index]['KeyName']
+                return key_name
+
+    print("No key found.")
+    sys.exit(1)
 
 
 def get_ip(id, jsondata):
@@ -107,10 +139,18 @@ def get_ip(id, jsondata):
                 ip = instance[index]['PublicIpAddress']
                 return ip
 
+    print( "No IP found for server: " + id )
+
 
 def lookup_instance_data(name):
     data = ec2.describe_instances(
         Filters=[
+            {
+                'Name': 'tag:Name',
+                'Values': [
+                    name
+                ]
+            },
             {
                 'Name': 'instance-state-name',
                 'Values': [
