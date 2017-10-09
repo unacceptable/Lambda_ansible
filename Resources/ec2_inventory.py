@@ -17,9 +17,9 @@ ec2     = boto3.client('ec2', region_name=region)
 ##### Main Function ###################
 ####################################'''
 
-def main(iname):
+def get_inventory(iname):
     json_inventory = json.dumps(
-        inventory(iname),
+        inventory_call(iname),
         sort_keys=True,
         indent=4
     )
@@ -31,7 +31,7 @@ def main(iname):
 ### Program Specific Functions ########
 ####################################'''
 
-def inventory(name):
+def inventory_call(name):
     idata       = lookup_instance_data(name)
     ids         = get_ids(idata)
 
@@ -169,10 +169,10 @@ def lookup_instance_data(name):
 
 if __name__ == "__main__":
     iname = 'Blog'
-    main(iname)
+    get_inventory(iname)
 
 
 def execute_me_lambda(event, context):
     iname   = os.environ['iname']
-    result  = main(iname)
+    result  = get_inventory(iname)
     return result
