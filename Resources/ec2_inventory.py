@@ -89,16 +89,16 @@ def get_meta(instances):
         id              = data['InstanceId']
 
         if meta:
-            newmeta = gen_meta(id, ip_address, ssh_key_name)
+            newmeta     = gen_meta(id, ip_address, ssh_key_name)
             meta.update(newmeta)
         else:
-            meta = gen_meta(id, ip_address, ssh_key_name)
+            meta        = gen_meta(id, ip_address, ssh_key_name)
 
     return meta
 
 
 def gen_meta(id, ip, key):
-    meta = {
+    meta_host   = {
         id: {
         'ansible_ssh_host': ip,
         'ansible_ssh_user': 'ubuntu',
@@ -106,12 +106,12 @@ def gen_meta(id, ip, key):
         }
     }
 
-    return meta
+    return meta_host
 
 
 def lookup_instance_data(filters):
-    data = ec2.describe_instances(Filters=[filters])
-    instances = [i for s in [r['Instances'] for r in data['Reservations']] for i in s]
+    data        = ec2.describe_instances(Filters=[filters])
+    instances   = [i for s in [r['Instances'] for r in data['Reservations']] for i in s]
 
     return instances
 
