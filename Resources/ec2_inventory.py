@@ -15,6 +15,11 @@ try:
 except KeyError:
     region  = 'us-east-1'
 
+try:
+    Name    = os.environ['Name']
+except KeyError:
+    Name    = ''
+
 ec2         = boto3.client('ec2', region_name=region)
 key_path    = '~/.ssh/AWS/'
 
@@ -22,13 +27,13 @@ key_path    = '~/.ssh/AWS/'
 ##### Main Function ###################
 ####################################'''
 
-def get_inventory(iname):
-    if iname:
+def get_inventory(Name):
+    if Name:
         filters=[
             {
                 'Name': 'tag:Name',
                 'Values': [
-                    iname
+                    Name
                 ]
             },
             {
@@ -132,19 +137,9 @@ def lookup_instance_data(filters):
 ####################################'''
 
 if __name__ == "__main__":
-    try:
-        Name    = os.environ['Name']
-    except KeyError:
-        Name    = ''
-
     get_inventory(Name)
 
 
 def execute_me_lambda(event, context):
-    try:
-        Name    = os.environ['Name']
-    except KeyError:
-        Name    = ''
-
     result  = get_inventory(Name)
     return result
