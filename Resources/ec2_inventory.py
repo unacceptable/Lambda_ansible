@@ -15,11 +15,11 @@ Name        = os.environ.get('Name', None)
 ec2         = boto3.client('ec2', region_name=region)
 key_path    = '~/.ssh/AWS/'
 filters     = {
-        'Name': 'instance-state-name',
-        'Values': [
-            'running'
-        ]
-    }
+    'Name': 'instance-state-name',
+    'Values': [
+        'running'
+    ]
+}
 
 
 '''####################################
