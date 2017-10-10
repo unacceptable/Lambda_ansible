@@ -10,18 +10,16 @@ import os
 ##### Global Variables ################
 ####################################'''
 
-try:
-    region  = os.environ['region']
-except KeyError:
-    region  = 'us-east-1'
-
-try:
-    Name    = os.environ['Name']
-except KeyError:
-    Name    = ''
-
+region      = os.environ.get('region', 'us-east-1')
+Name        = os.environ.get('Name', None)
 ec2         = boto3.client('ec2', region_name=region)
 key_path    = '~/.ssh/AWS/'
+filters     = {
+        'Name': 'instance-state-name',
+        'Values': [
+            'running'
+        ]
+    }
 
 '''####################################
 ##### Main Function ###################
@@ -29,29 +27,14 @@ key_path    = '~/.ssh/AWS/'
 
 def get_inventory(Name):
     if Name:
-        filters=[
-            {
-                'Name': 'tag:Name',
-                'Values': [
-                    Name
-                ]
-            },
-            {
-                'Name': 'instance-state-name',
-                'Values': [
-                    'running'
-                ]
-            }
-        ]
-    else:
-        filters=[
-            {
-                'Name': 'instance-state-name',
-                'Values': [
-                    'running'
-                ]
-            }
-        ]
+        filters.update(
+                {
+                    'Name': 'tag:Name',
+                    'Values': [
+                        Name
+                    ]
+                }
+            )
 
     ansible_inventory = json.dumps(
         inventory_call(filters),
@@ -126,7 +109,7 @@ def gen_meta(id, ip, key):
 
 
 def lookup_instance_data(filters):
-    data = ec2.describe_instances(Filters=filters)
+    data = ec2.describe_instances(Filters=[filters])
     instances = [i for s in [r['Instances'] for r in data['Reservations']] for i in s]
 
     return instances
