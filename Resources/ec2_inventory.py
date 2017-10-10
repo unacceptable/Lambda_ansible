@@ -21,6 +21,7 @@ filters     = {
         ]
     }
 
+
 '''####################################
 ##### Main Function ###################
 ####################################'''
@@ -28,13 +29,13 @@ filters     = {
 def get_inventory(Name):
     if Name:
         filters.update(
-                {
-                    'Name': 'tag:Name',
-                    'Values': [
-                        Name
-                    ]
-                }
-            )
+            {
+                'Name': 'tag:Name',
+                'Values': [
+                    Name
+                ]
+            }
+        )
 
     ansible_inventory = json.dumps(
         inventory_call(filters),
