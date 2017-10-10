@@ -100,22 +100,22 @@ def get_meta(instances):
         id              = data['InstanceId']
 
         if meta:
-            newmeta = {
-                id: {
-                    'ansible_ssh_host': ip_address,
-                    'ansible_ssh_user': 'ubuntu',
-                    'ansible_ssh_private_key_file': key_path + ssh_key_name + '.pem'
-                }
-            }
+            newmeta = gen_meta(id, ip_address, ssh_key_name)
             meta.update(newmeta)
         else:
-            meta = {
-                id: {
-                    'ansible_ssh_host': ip_address,
-                    'ansible_ssh_user': 'ubuntu',
-                    'ansible_ssh_private_key_file': key_path + ssh_key_name + '.pem'
-                }
-            }
+            meta = gen_meta(id, ip_address, ssh_key_name)
+
+    return meta
+
+
+def gen_meta(id, ip, key):
+    meta = {
+        id: {
+        'ansible_ssh_host': ip,
+        'ansible_ssh_user': 'ubuntu',
+        'ansible_ssh_private_key_file': key_path + key + '.pem'
+        }
+    }
 
     return meta
 
