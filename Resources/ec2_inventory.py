@@ -10,29 +10,57 @@ import sys, os
 ##### Global Variables ################
 ####################################'''
 
-region  = 'us-west-2'
-ec2     = boto3.client('ec2', region_name=region)
+region      = 'us-west-2'
+ec2         = boto3.client('ec2', region_name=region)
+key_path    = '~/.ssh/AWS/'
 
 '''####################################
 ##### Main Function ###################
 ####################################'''
 
 def get_inventory(iname):
-    json_inventory = json.dumps(
-        inventory_call(iname),
+    if iname:
+        filters=[
+            {
+                'Name': 'tag:Name',
+                'Values': [
+                    iname
+                ]
+            },
+            {
+                'Name': 'instance-state-name',
+                'Values': [
+                    'running'
+                ]
+            }
+        ]
+    else:
+        filters=[
+            {
+                'Name': 'instance-state-name',
+                'Values': [
+                    'running'
+                ]
+            }
+        ]
+
+    ansible_inventory = json.dumps(
+        inventory_call(filters),
         sort_keys=True,
         indent=4
     )
 
-    print(json_inventory)
+    print(ansible_inventory)
+
+    return ansible_inventory
 
 
 '''####################################
 ### Program Specific Functions ########
 ####################################'''
 
-def inventory_call(name):
-    idata       = lookup_instance_data(name)
+def inventory_call(filters):
+    idata       = lookup_instance_data(filters)
     ids         = get_ids(idata)
 
     json_data = {
@@ -76,89 +104,48 @@ def get_meta(ids, jsondata):
 
     meta = None
 
-    if isinstance(ids, list):
-        for id in ids:
-            ip_address  = get_ip(id, jsondata)
-            ssh_key     = get_ssh_key(id, jsondata)
+    for id in ids:
+        ip_address      = get_info(id, jsondata, 'PublicIpAddress')
+        ssh_key_name    = get_info(id, jsondata, 'KeyName')
 
-            if meta:
-                newmeta = {
-                    id: {
-                        'ansible_ssh_host': ip_address,
-                        'ansible_ssh_user': 'ubuntu',
-                        'ansible_ssh_private_key_file': '~/.ssh/AWS/' + ssh_key + '.pem'
-                    }
+        if meta:
+            newmeta = {
+                id: {
+                    'ansible_ssh_host': ip_address,
+                    'ansible_ssh_user': 'ubuntu',
+                    'ansible_ssh_private_key_file': key_path + ssh_key_name + '.pem'
                 }
-                meta.update(newmeta)
-            else:
-                meta = {
-                    id: {
-                        'ansible_ssh_host': ip_address,
-                        'ansible_ssh_user': 'ubuntu',
-                        'ansible_ssh_private_key_file': '~/.ssh/AWS/' + ssh_key + '.pem'
-                    }
-                }
-    else:
-        ip_address  = get_ip(ids, jsondata)
-        ssh_key     = get_ssh_key(ids, jsondata)
-
-        meta = {
-            ids: {
-                        'ansible_ssh_host': ip_address,
-                        'ansible_ssh_user': 'ubuntu',
-                        'ansible_ssh_private_key_file': '~/.ssh/AWS/' + ssh_key + '.pem'
             }
-        }
+            meta.update(newmeta)
+        else:
+            meta = {
+                id: {
+                    'ansible_ssh_host': ip_address,
+                    'ansible_ssh_user': 'ubuntu',
+                    'ansible_ssh_private_key_file': key_path + ssh_key_name + '.pem'
+                }
+            }
 
     return meta
 
 
-def get_ssh_key(id, jsondata):
-    key_name = None
+def get_info(id, jsondata, search):
+    info = None
 
     for index in range(len(jsondata)):
         instance = jsondata[index]['Instances']
 
         for index in range(len(instance)):
             if instance[index]['InstanceId'] == id:
-                key_name = instance[index]['KeyName']
-                return key_name
+                info = instance[index][search]
+                return info
 
-    print("No key found.")
+    print(search + " not found.")
     sys.exit(1)
 
 
-def get_ip(id, jsondata):
-    ip = None
-
-    for index in range(len(jsondata)):
-        instance = jsondata[index]['Instances']
-
-        for index in range(len(instance)):
-            if instance[index]['InstanceId'] == id:
-                ip = instance[index]['PublicIpAddress']
-                return ip
-
-    print( "No IP found for server: " + id )
-
-
-def lookup_instance_data(name):
-    data = ec2.describe_instances(
-        Filters=[
-            {
-                'Name': 'tag:Name',
-                'Values': [
-                    name
-                ]
-            },
-            {
-                'Name': 'instance-state-name',
-                'Values': [
-                    'running'
-                ]
-            }
-        ]
-    )
+def lookup_instance_data(filters):
+    data = ec2.describe_instances(Filters=filters)
 
     return data['Reservations']
 
@@ -168,7 +155,10 @@ def lookup_instance_data(name):
 ####################################'''
 
 if __name__ == "__main__":
-    iname = 'Blog'
+    try:
+        iname   = os.environ['iname']
+    except KeyError:
+        iname   = ''
     get_inventory(iname)
 
 
