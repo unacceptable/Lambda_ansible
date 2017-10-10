@@ -14,12 +14,14 @@ region      = os.environ.get('region', 'us-east-1')
 Name        = os.environ.get('Name', None)
 ec2         = boto3.client('ec2', region_name=region)
 key_path    = '~/.ssh/AWS/'
-filters     = {
-    'Name': 'instance-state-name',
-    'Values': [
-        'running'
-    ]
-}
+filters     = [
+    {
+        'Name': 'instance-state-name',
+        'Values': [
+            'running'
+        ]
+    }
+]
 
 
 '''####################################
@@ -28,7 +30,7 @@ filters     = {
 
 def get_inventory(Name):
     if Name:
-        filters.update(
+        filters.append(
             {
                 'Name': 'tag:Name',
                 'Values': [
@@ -83,8 +85,12 @@ def get_meta(instances):
     meta = None
 
     for data in instances:
-        # This will be replaced with 'PrivateIpAddress' or 'PrivateDnsName' after testing
-        ip_address      = data['PublicIpAddress']
+        # This will be replaced with 'PrivateIpAddress' or 'PrivateDnsName'
+        # after testing is performed
+        try:
+            ip_address  = data['PublicIpAddress']
+        except KeyError:
+            ip_address  = ''
         ssh_key_name    = data['KeyName']
         id              = data['InstanceId']
 
@@ -110,10 +116,14 @@ def gen_meta(id, ip, key):
 
 
 def lookup_instance_data(filters):
-    data        = ec2.describe_instances(Filters=[filters])
-    instances   = [i for s in [r['Instances'] for r in data['Reservations']] for i in s]
+    data        = ec2.describe_instances(Filters=filters)
+    flat_data   = [
+        instances for reservation in [
+            reservations['Instances'] for reservations in data['Reservations']
+        ] for instances in reservation
+    ]
 
-    return instances
+    return flat_data
 
 
 '''####################################
