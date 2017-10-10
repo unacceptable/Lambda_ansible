@@ -4,13 +4,17 @@
 
 import boto3
 import json
-import sys, os
+import os
 
 '''####################################
 ##### Global Variables ################
 ####################################'''
 
-region      = 'us-west-2'
+try:
+    region  = os.environ['region']
+except KeyError:
+    region  = 'us-east-1'
+
 ec2         = boto3.client('ec2', region_name=region)
 key_path    = '~/.ssh/AWS/'
 
@@ -60,8 +64,8 @@ def get_inventory(iname):
 ####################################'''
 
 def inventory_call(filters):
-    idata       = lookup_instance_data(filters)
-    ids         = get_ids(idata)
+    instances   = lookup_instance_data(filters)
+    ids         = get_ids(instances)
 
     json_data = {
         'all': {
@@ -71,7 +75,7 @@ def inventory_call(filters):
             'vars': {},
         },
         '_meta': {
-            'hostvars': get_meta(ids, idata)
+            'hostvars': get_meta(instances)
         }
         ,
         region: ids
@@ -80,33 +84,20 @@ def inventory_call(filters):
     return json_data
 
 
-def get_ids(jsondata):
-    ids = None
-
-    for index in range(len(jsondata)):
-        match = jsondata[index]['Instances']
-
-        for index in range(len(match)):
-            id = match[index]['InstanceId']
-
-            if ids:
-                ids = [ids, id]
-            else:
-                ids = id
-
-    if not isinstance(ids, list):
-        ids = [ids]
+def get_ids(instances):
+    ids = [i['InstanceId'] for i in instances]
 
     return ids
 
 
-def get_meta(ids, jsondata):
-
+def get_meta(instances):
     meta = None
 
-    for id in ids:
-        ip_address      = get_info(id, jsondata, 'PublicIpAddress')
-        ssh_key_name    = get_info(id, jsondata, 'KeyName')
+    for data in instances:
+        # This will be replaced with 'PrivateIpAddress' or 'PrivateDnsName' after testing
+        ip_address      = data['PublicIpAddress']
+        ssh_key_name    = data['KeyName']
+        id              = data['InstanceId']
 
         if meta:
             newmeta = {
@@ -129,25 +120,11 @@ def get_meta(ids, jsondata):
     return meta
 
 
-def get_info(id, jsondata, search):
-    info = None
-
-    for index in range(len(jsondata)):
-        instance = jsondata[index]['Instances']
-
-        for index in range(len(instance)):
-            if instance[index]['InstanceId'] == id:
-                info = instance[index][search]
-                return info
-
-    print(search + " not found.")
-    sys.exit(1)
-
-
 def lookup_instance_data(filters):
     data = ec2.describe_instances(Filters=filters)
+    instances = [i for s in [r['Instances'] for r in data['Reservations']] for i in s]
 
-    return data['Reservations']
+    return instances
 
 
 '''####################################
@@ -156,13 +133,18 @@ def lookup_instance_data(filters):
 
 if __name__ == "__main__":
     try:
-        iname   = os.environ['iname']
+        Name    = os.environ['Name']
     except KeyError:
-        iname   = ''
-    get_inventory(iname)
+        Name    = ''
+
+    get_inventory(Name)
 
 
 def execute_me_lambda(event, context):
-    iname   = os.environ['iname']
-    result  = get_inventory(iname)
+    try:
+        Name    = os.environ['Name']
+    except KeyError:
+        Name    = ''
+
+    result  = get_inventory(Name)
     return result
