@@ -2,19 +2,48 @@
 # Written by:   Robert J.
 #               Robert@scriptmyjob.com
 
-import ec2_inventory
+import subprocess
+import os, sys
+
 
 '''####################################
 ##### Global Variables ################
 ####################################'''
 
+Name        = os.environ.get('Name', 'Wordpress Worker Node')
+
+
 '''####################################
 ##### Main Function ###################
 ####################################'''
 
-def ansible_execute():
-    ec2_inventory.main('Wordpress Worker Node')
-    return None
+def main():
+
+    command = [
+                "ansible-playbook",
+                "./test.yml",
+                "-i",
+                "./ec2_inventory.py"
+            ]
+
+    print(command)
+
+    evar    = os.environ.copy()
+
+    print(str(evar))
+
+    try:
+        out = subprocess.Popen(
+            command,
+            env=dict(os.environ, Name=Name)
+        )
+    except subprocess.CalledProcessError, e:
+        print e.output
+        sys.exit()
+
+    print(out)
+
+    return out
 
 
 '''####################################
@@ -27,9 +56,9 @@ def ansible_execute():
 ####################################'''
 
 if __name__ == "__main__":
-    ansible_execute()
+    main()
 
 
 def execute_me_lambda(event, context):
-    result  = ansible_execute()
+    result  = main()
     return result
