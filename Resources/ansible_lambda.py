@@ -26,14 +26,8 @@ def main():
                 "./ec2_inventory.py"
             ]
 
-    print(command)
-
-    evar    = os.environ.copy()
-
-    print(str(evar))
-
     try:
-        out = subprocess.Popen(
+        out = subprocess.check_output(
             command,
             env=dict(os.environ, Name=Name)
         )
