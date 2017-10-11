@@ -28,7 +28,7 @@ filters     = [
 ##### Main Function ###################
 ####################################'''
 
-def get_inventory(Name):
+def main(Name):
     if Name:
         filters.append(
             {
@@ -131,9 +131,9 @@ def lookup_instance_data(filters):
 ####################################'''
 
 if __name__ == "__main__":
-    get_inventory(Name)
+    main(Name)
 
 
 def execute_me_lambda(event, context):
-    result  = get_inventory(Name)
+    result  = main(Name)
     return result
