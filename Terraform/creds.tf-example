@@ -9,6 +9,5 @@
 provider "aws" {
     access_key = ""
     secret_key = ""
-    region     = "${lookup(var.config,"region")}"
-
+    region     = "${lookup(var.global,"region")}"
 }
