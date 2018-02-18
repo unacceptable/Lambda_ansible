@@ -2,8 +2,8 @@
 ### IAM Policies #######################
 ########################################
 
-resource "aws_iam_policy" "lambda_ansible_invenotry" {
-    name    = "lambda_ansible_invenotry"
+resource "aws_iam_policy" "lambda_ansible_inventory" {
+    name    = "lambda_ansible_inventory"
     path    = "/"
     policy  = <<POLICY
 {
@@ -41,8 +41,8 @@ POLICY
 ### IAM Roles ##########################
 ########################################
 
-resource "aws_iam_role" "lambda_ansible_invenotry" {
-  name = "lambda_ansible_invenotry"
+resource "aws_iam_role" "lambda_ansible_inventory" {
+  name = "lambda_ansible_inventory"
 
   assume_role_policy = <<POLICY
 {
@@ -68,7 +68,7 @@ POLICY
 resource "aws_iam_policy_attachment" "expiry_attach" {
     name            = "expiry_attach"
     roles           = [
-        "${aws_iam_role.lambda_ansible_invenotry.name}"
+        "${aws_iam_role.lambda_ansible_inventory.name}"
     ]
-    policy_arn      = "${aws_iam_policy.lambda_ansible_invenotry.arn}"
+    policy_arn      = "${aws_iam_policy.lambda_ansible_inventory.arn}"
 }

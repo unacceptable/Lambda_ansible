@@ -39,13 +39,15 @@ def main(Name):
             }
         )
 
-    ansible_inventory = json.dumps(
-        inventory_call(filters),
+    ansible_inventory = inventory_call(filters)
+
+    pretty_inventory = json.dumps(
+        ansible_inventory,
         sort_keys=True,
         indent=4
     )
 
-    print(ansible_inventory)
+    print(pretty_inventory)
 
     return ansible_inventory
 

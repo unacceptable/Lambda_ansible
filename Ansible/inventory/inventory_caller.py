@@ -10,7 +10,7 @@ import os
 #######################################
 
 region      = os.environ.get('region', 'us-west-2')
-function    = os.environ.get('function', 'lambda_shutdown_ec2')
+function    = os.environ.get('function', 'ansible_inventory')
 aws_lambda  = boto3.client("lambda", region_name=region)
 
 #######################################

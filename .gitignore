@@ -1,5 +1,5 @@
 /Resources/*.pyc
-/Resources/*.zip
+/Resources/*/*.zip
 /Terraform/creds.tf
 /Terraform/.terraform/*
 /Terraform/terraform*
