@@ -10,26 +10,25 @@ import os, sys
 ##### Global Variables ################
 #######################################
 
-Name        = os.environ.get('Name', 'Wordpress Worker Node')
-
+hosts       = os.environ.get('hosts', 'all')
+playbook    = os.environ.get('playbook', 'playbooks/test.yml')
 
 #######################################
 ##### Main Function ###################
 #######################################
 
 def main():
-
     command = [
                 "ansible-playbook",
-                "./test.yml",
-                "-i",
-                "./ec2_inventory.py"
+                playbook,
+                '--limit',
+                hosts
             ]
 
     try:
         out = subprocess.check_output(
             command,
-            env=dict(os.environ, Name=Name)
+            env=dict(os.environ, hosts=hosts)
         )
     except subprocess.CalledProcessError, e:
         print e.output
