@@ -6,11 +6,11 @@ import boto3
 import json
 import os
 
-'''####################################
+#######################################
 ##### Global Variables ################
-####################################'''
+#######################################
 
-region      = os.environ.get('region', 'us-east-1')
+region      = os.environ.get('region', 'us-west-2')
 Name        = os.environ.get('Name', None)
 ec2         = boto3.client('ec2', region_name=region)
 key_path    = '~/.ssh/AWS/'
@@ -24,9 +24,9 @@ filters     = [
 ]
 
 
-'''####################################
+#######################################
 ##### Main Function ###################
-####################################'''
+#######################################
 
 def main(Name):
     if Name:
@@ -50,9 +50,9 @@ def main(Name):
     return ansible_inventory
 
 
-'''####################################
+#######################################
 ### Program Specific Functions ########
-####################################'''
+#######################################
 
 def inventory_call(filters):
     instances   = lookup_instance_data(filters)
@@ -67,8 +67,7 @@ def inventory_call(filters):
         },
         '_meta': {
             'hostvars': get_meta(instances)
-        }
-        ,
+        },
         region: ids
     }
 
@@ -106,9 +105,9 @@ def get_meta(instances):
 def gen_meta(id, ip, key):
     meta_host   = {
         id: {
-        'ansible_ssh_host': ip,
-        'ansible_ssh_user': 'ubuntu',
-        'ansible_ssh_private_key_file': key_path + key + '.pem'
+            'ansible_ssh_host': ip,
+            'ansible_ssh_user': 'ubuntu',
+            'ansible_ssh_private_key_file': key_path + key + '.pem'
         }
     }
 
@@ -126,9 +125,9 @@ def lookup_instance_data(filters):
     return flat_data
 
 
-'''####################################
+#######################################
 ##### Execution #######################
-####################################'''
+#######################################
 
 if __name__ == "__main__":
     main(Name)
