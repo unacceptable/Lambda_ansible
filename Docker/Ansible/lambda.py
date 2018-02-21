@@ -11,7 +11,7 @@ import os, sys
 #######################################
 
 hosts       = os.environ.get('hosts', 'all')
-playbook    = os.environ.get('playbook', 'playbooks/test.yml')
+playbook    = os.environ.get('playbook', '/var/task/playbooks/test.yml')
 
 #######################################
 ##### Main Function ###################
@@ -19,11 +19,11 @@ playbook    = os.environ.get('playbook', 'playbooks/test.yml')
 
 def main():
     command = [
-                "ansible-playbook",
-                playbook,
-                '--limit',
-                hosts
-            ]
+        "/var/task/bin/ansible-playbook",
+        playbook,
+        '--limit',
+        hosts
+    ]
 
     try:
         out = subprocess.check_output(

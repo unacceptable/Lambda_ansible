@@ -31,3 +31,24 @@ resource "aws_lambda_function" "ansible_inventory" {
         }
     }
 }
+
+# ansible_execution
+####################
+
+resource "aws_lambda_function" "ansible_execution" {
+    depends_on      = [
+        "null_resource.get_zip"
+    ]
+    filename        = "${path.module}/../Resources/Ansible.zip"
+    function_name   = "ansible_execution"
+    role            = "${aws_iam_role.lambda_ansible_execution.arn}"
+    handler         = "lambda.execute_me_lambda"
+    runtime         = "python2.7"
+    memory_size     = 128
+    timeout         = 5
+    environment {
+        variables   = {
+            region      = "${lookup(var.global,"region")}"
+        }
+    }
+}

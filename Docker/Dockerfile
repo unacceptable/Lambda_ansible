@@ -11,14 +11,15 @@ RUN virtualenv -p /usr/bin/python2.7 /Ansible/
 
 RUN cd /Ansible/ && \
     source bin/activate && \
-    pip install ansible
+    pip install ansible boto3
 
 RUN cd /Ansible/ && \
     zip /Ansible.zip \
         lambda.py \
         ansible.cfg \
         inventory/* \
-        playbooks/*
+        playbooks/* \
+        bin/*
 
 RUN cd /Ansible/lib/python2.7/site-packages/ && \
         zip -r /Ansible.zip .; \
